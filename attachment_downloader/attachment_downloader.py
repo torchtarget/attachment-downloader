@@ -17,14 +17,20 @@ class AttachmentDownloader:
             print("Folder not found")
             return
 
-        search_status, search_data = self.mail.search(None, "ALL")
+        search_status, search_data = self.mail.search(None, '(UNSEEN)')
+    #    search_status, search_data = self.mail.search(None, 'ALL')
         if search_status != 'OK':
             print("No messages found!")
             return
 
         messages = []
         for num in search_data[0].split():
+            print(num)
             fetch_status, data = self.mail.fetch(num, '(RFC822)')
+            print(num)
+            self.mail.store(num, '+FLAGS', '\Seen')
+            self.mail.store(num, 'FLAGS', '\Seen')
+
             if fetch_status != 'OK':
                 print("ERROR getting message", num)
                 return
@@ -41,6 +47,7 @@ class MailMessage:
         self.msg = email.message_from_string(data.decode('utf-8'))
         self.subject = self.msg['Subject']
         self.raw_date = self.msg['Date']
+        self.to_address=self.msg['To']
         date_tuple = email.utils.parsedate_tz(self.raw_date)
         if date_tuple:
             self.local_date = datetime.datetime.fromtimestamp(email.utils.mktime_tz(date_tuple))
